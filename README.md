@@ -141,6 +141,17 @@ npm run start
 
 `EMBEDDING_PROVIDER` 默认跟随 `AI_PROVIDER`，也可以单独指定。语义聚类依赖 embedding 模型，使用 Ollama 时建议先执行 `ollama pull llama3.1` 和 `ollama pull nomic-embed-text`。
 
+### 超时配置
+
+开启 thinking（如 `GLM_MODEL_NAME=glm-4.6`）时，单次深度分析请求可能需要 100s 以上，超时会导致分析结果退化为「API调用失败」兜底内容。
+
+| 变量 | 默认值 | 说明 |
+|------|--------|------|
+| `AI_ANALYSIS_TIMEOUT_MS` | `300000` | 单个聚类深度分析超时（毫秒） |
+| `AI_PRODUCT_TIMEOUT_MS` | `180000` | AI 产品方案生成超时（毫秒） |
+| `AI_REQUEST_TIMEOUT_MS` | `60000` | 其余 AI 请求的兜底默认超时 |
+| `DEEPPOINT_JOB_TIMEOUT_MS` | `3600000` | 整个任务（抓取 + 逐聚类串行分析）超时 |
+
 ### 语言切换
 
 - 页面右上角点击语言切换器可切换中文/英文

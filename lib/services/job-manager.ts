@@ -554,4 +554,14 @@ export class JobManager {
 }
 
 // 全局单例实例
-export const jobManager = new JobManager();
+// 注意：Next.js dev（Turbopack）在文件变更时会重新执行服务端模块。
+// 若直接 new，会重新执行构造函数里的 loadAll()，把磁盘上仍处于 processing
+// 的任务误判为"服务重启，任务已停止"（实际爬虫还在正常跑），同时内存队列也会重置。
+// 挂到 globalThis 上可保证同一 Node 进程内始终只有一个实例。
+const globalForJobManager = globalThis as typeof globalThis & {
+  __deeppointJobManager?: JobManager;
+};
+
+export const jobManager = globalForJobManager.__deeppointJobManager ?? new JobManager();
+
+globalForJobManager.__deeppointJobManager = jobManager;

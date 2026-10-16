@@ -73,6 +73,10 @@ CDP_CONNECT_EXISTING = False
 # 浏览器启动超时时间（秒）
 BROWSER_LAUNCH_TIMEOUT = 60
 
+# 页面导航超时时间（毫秒）
+# 抖音首页资源较多，Playwright 默认 30 秒等待 load 事件容易超时导致爬虫直接退出
+PAGE_NAVIGATION_TIMEOUT_MS = 90000
+
 # 是否在程序结束时自动关闭浏览器
 # 设置为False可以保持浏览器运行，便于调试
 AUTO_CLOSE_BROWSER = True

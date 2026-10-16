@@ -44,6 +44,19 @@ export interface DeepAnalysisResult {
   market_size_score: number;  // AI模型评估的市场规模 0-5
 }
 
+// 深度分析单次请求超时（毫秒）。thinking 模式下长文本分析实测可达 100s 以上，
+// 默认 60s 会频繁 axios 超时并退化为"API调用失败"兜底结果。
+const DEFAULT_ANALYSIS_TIMEOUT_MS = 300000;
+
+function getAnalysisTimeoutMs(): number {
+  const configured = Number.parseInt(process.env.AI_ANALYSIS_TIMEOUT_MS ?? '', 10);
+  if (Number.isFinite(configured) && configured > 0) {
+    return configured;
+  }
+
+  return DEFAULT_ANALYSIS_TIMEOUT_MS;
+}
+
 export class GLMService {
   private provider: AIChatProvider;
   private useThinking: boolean;
@@ -172,10 +185,12 @@ ${texts.join('\n\n')}
           ? {
               extraBody: { thinking: { type: 'enabled' } },
               maxTokens: 65536,
-              temperature: 1.0
+              temperature: 1.0,
+              timeoutMs: getAnalysisTimeoutMs()
             }
           : {
-              temperature: 0.6
+              temperature: 0.6,
+              timeoutMs: getAnalysisTimeoutMs()
             }
       );
 

@@ -206,5 +206,14 @@ export class AIProductJobManager {
 }
 
 // 全局单例实例
-export const aiProductJobManager = new AIProductJobManager();
+// 同 job-manager：避免 Next.js dev 模块重载时重新 loadAll()，
+// 导致仍在运行的任务被误判为"服务重启，任务已停止"。
+const globalForAIProductJobManager = globalThis as typeof globalThis & {
+  __deeppointAIProductJobManager?: AIProductJobManager;
+};
+
+export const aiProductJobManager =
+  globalForAIProductJobManager.__deeppointAIProductJobManager ?? new AIProductJobManager();
+
+globalForAIProductJobManager.__deeppointAIProductJobManager = aiProductJobManager;
 

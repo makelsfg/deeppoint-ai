@@ -44,6 +44,18 @@ const DEFAULT_MODELS: Record<AIProviderName, string> = {
   lmstudio: 'local-model'
 };
 
+const DEFAULT_TIMEOUT_MS = 60000;
+
+// 可通过 AI_REQUEST_TIMEOUT_MS 统一覆盖（毫秒）
+function getDefaultTimeoutMs(): number {
+  const configured = Number.parseInt(process.env.AI_REQUEST_TIMEOUT_MS ?? '', 10);
+  if (Number.isFinite(configured) && configured > 0) {
+    return configured;
+  }
+
+  return DEFAULT_TIMEOUT_MS;
+}
+
 function normalizeProviderName(value: string | undefined): AIProviderName {
   const normalizedValue = value?.trim().toLowerCase();
   if (
@@ -110,11 +122,12 @@ function getProviderConfig(modelOverride?: string): ProviderConfig {
 }
 
 function getMissingCredentialMessage(config: ProviderConfig): string {
-  if (config.provider === 'glm') {
+  // 只有真正缺少 API Key 时才报错；否则不应拦截请求
+  if (config.provider === 'glm' && !config.apiKey) {
     return 'GLM_API_KEY 环境变量未设置';
   }
 
-  if (config.provider === 'openai') {
+  if (config.provider === 'openai' && !config.apiKey) {
     return 'OPENAI_API_KEY 环境变量未设置';
   }
 
@@ -155,7 +168,7 @@ export function createAIChatProvider(modelOverride?: string): AIChatProvider {
         },
         {
           headers,
-          timeout: options.timeoutMs || 60000
+          timeout: options.timeoutMs || getDefaultTimeoutMs()
         }
       );
 

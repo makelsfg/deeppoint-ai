@@ -21,6 +21,18 @@ export interface AIProductResult {
   representative_texts: string[];
 }
 
+// AI 产品方案生成单次请求超时（毫秒），可用 AI_PRODUCT_TIMEOUT_MS 覆盖
+const DEFAULT_AI_PRODUCT_TIMEOUT_MS = 180000;
+
+function getAIProductTimeoutMs(): number {
+  const configured = Number.parseInt(process.env.AI_PRODUCT_TIMEOUT_MS ?? '', 10);
+  if (Number.isFinite(configured) && configured > 0) {
+    return configured;
+  }
+
+  return DEFAULT_AI_PRODUCT_TIMEOUT_MS;
+}
+
 export class AIProductService {
   private provider: AIChatProvider;
 
@@ -45,7 +57,7 @@ export class AIProductService {
         {
           temperature: 0.7,
           topP: 0.8,
-          timeoutMs: 60000
+          timeoutMs: getAIProductTimeoutMs()
         }
       );
 

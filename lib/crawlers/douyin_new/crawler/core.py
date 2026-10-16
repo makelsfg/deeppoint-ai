@@ -95,7 +95,11 @@ class DouYinCrawler(AbstractCrawler):
                 await self.browser_context.add_init_script(path="libs/stealth.min.js")
 
             self.context_page = await self.browser_context.new_page()
-            await self.context_page.goto(self.index_url)
+            # 抖音首页资源较多，默认 30 秒超时 + 等待 load 事件容易触发 TimeoutError，
+            # 表现为：浏览器窗口已打开（页面看起来正常）但爬虫立刻报错退出、窗口被关闭。
+            # 这里放宽导航超时，并且只等待 DOM 就绪。
+            self.context_page.set_default_navigation_timeout(config.PAGE_NAVIGATION_TIMEOUT_MS)
+            await self.context_page.goto(self.index_url, wait_until="domcontentloaded")
 
             self.dy_client = await self.create_douyin_client(httpx_proxy_format)
             if not await self.dy_client.pong(browser_context=self.browser_context):

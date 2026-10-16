@@ -174,9 +174,21 @@ class JobQueue {
   }
 }
 
-export const jobQueue = new JobQueue(
-  readPositiveInteger('DEEPPOINT_MAX_CONCURRENT_JOBS', DEFAULT_MAX_CONCURRENT_JOBS)
-);
+// 队列的 runningJobs / queue 是内存态。
+// Next.js dev（Turbopack）重新执行模块时会重建队列，导致并发限制失效、
+// 出现多个爬虫同时运行（共用同一个 CDP 浏览器时会互相把窗口关掉）。
+// 挂到 globalThis 上保证同一进程内队列状态不丢失。
+const globalForJobQueue = globalThis as typeof globalThis & {
+  __deeppointJobQueue?: JobQueue;
+};
+
+export const jobQueue =
+  globalForJobQueue.__deeppointJobQueue ??
+  new JobQueue(
+    readPositiveInteger('DEEPPOINT_MAX_CONCURRENT_JOBS', DEFAULT_MAX_CONCURRENT_JOBS)
+  );
+
+globalForJobQueue.__deeppointJobQueue = jobQueue;
 
 export function withTimeout<T>(
   task: Promise<T>,
